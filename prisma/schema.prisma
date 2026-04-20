@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Sensor {
+  id         String          @id @default(uuid()) @db.Uuid
+  deviceId   String          @unique
+  location   String
+  lastSeenAt DateTime
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  readings   SensorReading[]
+}
+
+model SensorReading {
+  id          String   @id @default(uuid()) @db.Uuid
+  sensorId    String   @db.Uuid
+  sensor      Sensor   @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+  temperature Float
+  humidity    Float
+  recordedAt  DateTime
+  createdAt   DateTime @default(now())
+  severity    Severity
+
+  @@index([sensorId])
+  @@index([sensorId, recordedAt(sort: Desc)])
+  @@index([recordedAt])
+  @@index([severity, recordedAt])
+}
+
+enum Severity {
+  normal
+  warning
+  critical
+}
